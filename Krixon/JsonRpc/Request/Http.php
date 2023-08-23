@@ -46,7 +46,7 @@ class Krixon_JsonRpc_Request_Http extends Krixon_JsonRpc_Request
     {
         $json = @file_get_contents('php://input');
         if (!$json) {
-            throw new Krixon_JsonRpc_Fault('Unable to read HTTP POST data');
+            throw new Krixon_JsonRpc_Exception('Unable to read HTTP POST data');
             return;
         }
 

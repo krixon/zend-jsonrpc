@@ -43,7 +43,7 @@ class Krixon_JsonRpc_Request
      * @var string
      */
     protected $_id;
-    
+
     /**
      * Json request string
      * @var string
@@ -54,7 +54,10 @@ class Krixon_JsonRpc_Request
      * Method parameters
      * @var array
      */
-    protected $_params = array();
+    protected $_params = [];
+
+    /** @var Zend_XmlRpc_Fault */
+    protected $_fault;
 
     /**
      * Create a new JSON-RPC request
@@ -71,7 +74,7 @@ class Krixon_JsonRpc_Request
         if (null !== $params) {
             $this->setParams($params);
         }
-        
+
         $this->setId($id);
     }
 
@@ -125,13 +128,13 @@ class Krixon_JsonRpc_Request
     {
         return $this->_method;
     }
-    
+
     /**
      * Set the id of this request
      *
      * @param string|null $id An id to use for the request, or null to have an id
      *                        generated automatically
-     * @return Krixon_JsonRpc_Request
+     * @return $this
      */
     public function setId($id = null)
     {
@@ -141,7 +144,7 @@ class Krixon_JsonRpc_Request
         $this->_id = $id;
         return $this;
     }
-    
+
     /**
      * Retrieve current request id
      *
@@ -238,12 +241,12 @@ class Krixon_JsonRpc_Request
      * @return string
      */
     public function saveJson()
-    {        
-        $data = array(
+    {
+        $data = [
             'jsonrpc' => '2.0',
             'method'  => $this->getMethod(),
             'id'      => $this->getId()
-        );
+        ];
         $params = $this->getParams();
         if (!empty($params)) {
             $data['params'] = $params;
@@ -260,7 +263,12 @@ class Krixon_JsonRpc_Request
     {
         return $this->saveJson();
     }
-    
+
+    /**
+     * Generate a unique id for this request
+     *
+     * @return string
+     */
     private function _generateId()
     {
         return uniqid();

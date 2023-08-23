@@ -38,7 +38,7 @@ class Krixon_JsonRpc_Request_Stdin extends Krixon_JsonRpc_Request
     {
         $fh = fopen('php://stdin', 'r');
         if (!$fh) {
-            throw new Krixon_JsonRpc_Server_Exception('Could not read from stdin');
+            throw new Krixon_JsonRpc_Exception('Could not read from stdin');
         }
 
         $json = '';
