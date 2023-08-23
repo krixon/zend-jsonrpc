@@ -62,7 +62,13 @@ class Krixon_JsonRpc_Client
      * Proxy object for more convenient method calls
      * @var array of Krixon_JsonRpc_Client_ServerProxy
      */
-    protected $_proxyCache = array();
+    protected $_proxyCache = [];
+
+    /**
+     * Response result type can be either an object or an array.
+     * @var int
+     */
+    protected $_resultType = Krixon_JsonRpc_Response::TYPE_OBJECT;
 
     /**
      * Create a new JSON-RPC client to a remote server
@@ -80,6 +86,18 @@ class Krixon_JsonRpc_Client
         }
 
         $this->_serverAddress = $server;
+    }
+
+    /**
+     * Sets the response result type.
+     *
+     * @param int $type
+     * @return $this
+     */
+    public function setResultType(int $type)
+    {
+        $this->_resultType = $type;
+        return $this;
     }
 
     /**
@@ -155,22 +173,22 @@ class Krixon_JsonRpc_Client
             $http->setUri($this->_serverAddress);
         }
 
-        $http->setHeaders(array(
+        $http->setHeaders([
             'Content-Type: application/json; charset=utf-8',
             'Accept: application/json',
-        ));
+        ]);
 
         if ($http->getHeader('user-agent') === null) {
-            $http->setHeaders(array('User-Agent: Krixon_JsonRpc_Client'));
+            $http->setHeaders(['User-Agent: Krixon_JsonRpc_Client']);
         }
 
         $json = (string) $this->_lastRequest;
         $http->setRawData($json);
-        
+
         try {
             $httpResponse = $http->request(Zend_Http_Client::POST);
         } catch (Zend_Http_Client_Adapter_Exception $e) {
-            throw new Krixon_JsonRpc_Client_Exception('Unable to connect to ' . $http->getUri());
+            throw new Krixon_JsonRpc_Client_Exception('Unable to connect to ' . $http->getUri() . ' Error:' . $e->getMessage());
         }
 
         if (!$httpResponse->isSuccessful()) {
@@ -180,7 +198,7 @@ class Krixon_JsonRpc_Client
              */
             require_once 'Krixon/JsonRpc/Client/HttpException.php';
             throw new Krixon_JsonRpc_Client_HttpException(
-                $httpResponse->getMessage(),
+                $httpResponse->getStatus() . ' ' . $httpResponse->getMessage(),
                 $httpResponse->getStatus()
             );
         }
@@ -189,7 +207,7 @@ class Krixon_JsonRpc_Client
             $response = new Krixon_JsonRpc_Response($this->_lastRequest->getId());
         }
         $this->_lastResponse = $response;
-        $this->_lastResponse->loadJson($httpResponse->getBody());
+        $this->_lastResponse->loadJson($httpResponse->getBody(), $this->_resultType);
     }
 
     /**
@@ -200,7 +218,7 @@ class Krixon_JsonRpc_Client
      * @return mixed
      * @throws Krixon_JsonRpc_Client_FaultException
      */
-    public function call($method, $params = array())
+    public function call($method, $params = [])
     {
         $request = $this->_createRequest($method, $params);
         $this->doRequest($request);

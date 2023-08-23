@@ -19,16 +19,16 @@ require_once 'Krixon/JsonRpc/Response/Exception.php';
  */
 class Krixon_JsonRpc_Response
 {
-    
+
     const TYPE_OBJECT = 0;
     const TYPE_ARRAY  = 1;
-    
+
     /**
      * The id of the request by which to validate the response
      * @var string
      */
     protected $_id;
-    
+
     /**
      * Return value
      * @var mixed
@@ -56,19 +56,19 @@ class Krixon_JsonRpc_Response
         $this->setId($id);
         $this->setReturnValue($return);
     }
-    
+
     /**
      * Set the id of the request
      *
      * @param string $id The id of the request used to generate this response
-     * @return Krixon_JsonRpc_Response
+     * @return $this
      */
     public function setId($id)
     {
         $this->_id = $id;
         return $this;
     }
-    
+
     /**
      * Retrieve request id
      *
@@ -83,7 +83,7 @@ class Krixon_JsonRpc_Response
      * Set encoding to use in response
      *
      * @param string $encoding
-     * @return Krixon_JsonRpc_Response
+     * @return $this
      */
     public function setEncoding($encoding)
     {
@@ -138,20 +138,16 @@ class Krixon_JsonRpc_Response
         if (!is_string($response)) {
             throw new Krixon_JsonRpc_Response_Exception('Invalid JSON provided');
         }
-        
-        if (self::TYPE_ARRAY == $type) {
-            $type = Zend_Json::TYPE_ARRAY;
-        } else {
-            $type = Zend_Json::TYPE_OBJECT;
-        }
-        
+
+        $type = $type == self::TYPE_ARRAY ? Zend_Json::TYPE_ARRAY : Zend_Json::TYPE_OBJECT;
+
         try {
             $json = Zend_Json::decode($response, $type);
         } catch (Zend_Json_Exception $e) {
-            throw new Krixon_JsonRpc_Response_Exception('Failed to parse request');
+            throw new Krixon_JsonRpc_Response_Exception('Failed to parse response: '.$response);
         }
-        
-        $responseId = self::TYPE_ARRAY == $type ? $json['id'] : $json->id;
+
+        $responseId = $type == self::TYPE_ARRAY ? $json['id'] : $json->id;
         if ($this->getId() != $responseId) {
             throw new Krixon_JsonRpc_Response_Exception('Invalid response. Id does not match request id');
         }
@@ -167,8 +163,8 @@ class Krixon_JsonRpc_Response
     public function saveJson()
     {
         $value = $this->getReturnValue();
-        if (null === $value) {
-            $value = array();
+        if ($value === null) {
+            $value = [];
         }
         return Zend_Json::encode($value);
     }
